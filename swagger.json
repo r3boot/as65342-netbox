@@ -16622,9 +16622,7 @@
           "readOnly": true
         },
         "family": {
-          "title": "Family",
-          "type": "integer",
-          "readOnly": true
+          "$ref": "#/definitions/Family"
         },
         "address": {
           "title": "Address",
@@ -16682,6 +16680,10 @@
         },
         "nat_outside": {
           "$ref": "#/definitions/NestedIPAddress"
+        },
+        "dns_name": {
+          "title": "DNS Name",
+          "type": "string"
         },
         "custom_fields": {
           "title": "Custom fields",

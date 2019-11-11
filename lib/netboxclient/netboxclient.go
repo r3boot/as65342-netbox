@@ -20,6 +20,7 @@ type NetboxClient struct {
 	token               common.TokenAuth
 	limit               int64
 	ipamPrefixesList    *ipam.IpamPrefixesListOK
+	ipamIpAddressesList *ipam.IpamIPAddressesListOK
 	dcimDevicesList     *dcim.DcimDevicesListOK
 	virtualMachinesList *virtualization.VirtualizationVirtualMachinesListOK
 	configContextList   *extras.ExtrasConfigContextListOK
@@ -33,59 +34,98 @@ func NewNetboxClient(api *client.NetBox, token common.TokenAuth, limit int64) (c
 		limit: limit,
 	}
 
-	err = client.PrewarmCaches()
-	if err != nil {
-		return nil, fmt.Errorf("client.PrewarmCaches: %v\n", err)
-	}
-
 	return client, nil
 }
 
-func (c *NetboxClient) PrewarmCaches() (err error) {
-	c.ipamPrefixesList, err = c.api.Ipam.IpamPrefixesList(&ipam.IpamPrefixesListParams{
-		Limit:   &c.limit,
-		Context: context.Background(),
-	}, c.token)
-	if err != nil {
-		return fmt.Errorf("IPAM.IPAMPrefixesList: %v", err)
+func (c *NetboxClient) UpdateIpamPrefixesList() (err error) {
+	if c.ipamPrefixesList == nil {
+		c.ipamPrefixesList, err = c.api.Ipam.IpamPrefixesList(&ipam.IpamPrefixesListParams{
+			Limit:   &c.limit,
+			Context: context.Background(),
+		}, c.token)
+		if err != nil {
+			return fmt.Errorf("Ipam.IpamPrefixesList: %v", err)
+		}
 	}
 
-	c.dcimDevicesList, err = c.api.Dcim.DcimDevicesList(&dcim.DcimDevicesListParams{
-		Limit:   &c.limit,
-		Context: context.Background(),
-	}, c.token)
-	if err != nil {
-		return fmt.Errorf("Dcim.DcimDevicesList: %v", err)
+	return nil
+}
+
+func (c *NetboxClient) UpdateIpamIpAddressesList() (err error) {
+	if c.ipamIpAddressesList == nil {
+		c.ipamIpAddressesList, err = c.api.Ipam.IpamIPAddressesList(&ipam.IpamIPAddressesListParams{
+			Limit:   &c.limit,
+			Context: context.Background(),
+		}, c.token)
+		if err != nil {
+			return fmt.Errorf("Ipam.IpamIPAddressesList: %v", err)
+		}
 	}
 
-	c.virtualMachinesList, err = c.api.Virtualization.VirtualizationVirtualMachinesList(&virtualization.VirtualizationVirtualMachinesListParams{
-		Limit:   &c.limit,
-		Context: context.Background(),
-	}, c.token)
-	if err != nil {
-		return fmt.Errorf("Virtualization.VirtualizationVirtualMachinesList: %v", err)
+	return nil
+}
+
+func (c *NetboxClient) UpdateDcimDevicesList() (err error) {
+	if c.dcimDevicesList == nil {
+		c.dcimDevicesList, err = c.api.Dcim.DcimDevicesList(&dcim.DcimDevicesListParams{
+			Limit:   &c.limit,
+			Context: context.Background(),
+		}, c.token)
+		if err != nil {
+			return fmt.Errorf("Dcim.DcimDevicesList: %v", err)
+		}
 	}
 
-	c.configContextList, err = c.api.Extras.ExtrasConfigContextList(&extras.ExtrasConfigContextListParams{
-		Limit:   &c.limit,
-		Context: context.Background(),
-	}, c.token)
-	if err != nil {
-		return fmt.Errorf("Extras.ExtrasConfigContextList: %v", err)
+	return nil
+}
+
+func (c *NetboxClient) UpdateVirtualizationVirtualMachinesList() (err error) {
+	if c.virtualMachinesList == nil {
+		c.virtualMachinesList, err = c.api.Virtualization.VirtualizationVirtualMachinesList(&virtualization.VirtualizationVirtualMachinesListParams{
+			Limit:   &c.limit,
+			Context: context.Background(),
+		}, c.token)
+		if err != nil {
+			return fmt.Errorf("Virtualization.VirtualizationVirtualMachinesList: %v", err)
+		}
+	}
+	return nil
+}
+
+func (c *NetboxClient) UpdateExtrasConfigContextList() (err error) {
+	if c.configContextList == nil {
+		c.configContextList, err = c.api.Extras.ExtrasConfigContextList(&extras.ExtrasConfigContextListParams{
+			Limit:   &c.limit,
+			Context: context.Background(),
+		}, c.token)
+		if err != nil {
+			return fmt.Errorf("Extras.ExtrasConfigContextList: %v", err)
+		}
 	}
 
-	c.tenantList, err = c.api.Tenancy.TenancyTenantsList(&tenancy.TenancyTenantsListParams{
-		Limit:   &c.limit,
-		Context: context.Background(),
-	}, c.token)
-	if err != nil {
-		return fmt.Errorf("Tenancy.TenancyTenantsList: %v", err)
+	return nil
+}
+
+func (c *NetboxClient) UpdateTenancyTenantsList() (err error) {
+	if c.tenantList == nil {
+		c.tenantList, err = c.api.Tenancy.TenancyTenantsList(&tenancy.TenancyTenantsListParams{
+			Limit:   &c.limit,
+			Context: context.Background(),
+		}, c.token)
+		if err != nil {
+			return fmt.Errorf("Tenancy.TenancyTenantsList: %v", err)
+		}
 	}
 
 	return nil
 }
 
 func (c *NetboxClient) GetPrefixList(tenant string) (allPrefixes []*net.IPNet, err error) {
+	err = c.UpdateIpamPrefixesList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateIpamPrefixesList: %v", err)
+	}
+
 	for _, entry := range c.ipamPrefixesList.Payload.Results {
 		if !common.IsAllowedTenant(*entry.Tenant.Slug) {
 			continue
@@ -112,7 +152,39 @@ func (c *NetboxClient) GetPrefixList(tenant string) (allPrefixes []*net.IPNet, e
 	return allPrefixes, nil
 }
 
+func (c *NetboxClient) GetIpAddressList(tenant string) (allIpAddresses []common.IpAddress, err error) {
+	err = c.UpdateIpamIpAddressesList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateIpamIpAddressesList: %v", err)
+	}
+
+	for _, entry := range c.ipamIpAddressesList.Payload.Results {
+		ipAddress := common.IpAddress{
+			Dns:    entry.DNSName,
+			Tenant: *entry.Tenant.Slug,
+		}
+
+		ipAddress.Address, ipAddress.Network, err = net.ParseCIDR(*entry.Address)
+		if err != nil {
+			return nil, fmt.Errorf("net.ParseCIDR: %v", err)
+		}
+
+		allIpAddresses = append(allIpAddresses, ipAddress)
+	}
+	return allIpAddresses, nil
+}
+
 func (c *NetboxClient) GetHostList() (allDevices []common.ManagedDevice, err error) {
+	err = c.UpdateDcimDevicesList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateDcimDevicesList: %v", err)
+	}
+
+	err = c.UpdateVirtualizationVirtualMachinesList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateVirtualizationVirtualMachinesList: %v", err)
+	}
+
 	// Get details for physical systems
 	for _, entry := range c.dcimDevicesList.Payload.Results {
 		if !common.IsAllowedTenant(*entry.Tenant.Slug) {
@@ -223,6 +295,11 @@ func (c *NetboxClient) GetHostList() (allDevices []common.ManagedDevice, err err
 }
 
 func (c *NetboxClient) ListConfigContexts() (contexts []common.ConfigContext, err error) {
+	err = c.UpdateExtrasConfigContextList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateExtrasConfigContextList: %v", err)
+	}
+
 	for _, entry := range c.configContextList.Payload.Results {
 		context := common.ConfigContext{
 			Name:   *entry.Name,
@@ -235,6 +312,11 @@ func (c *NetboxClient) ListConfigContexts() (contexts []common.ConfigContext, er
 }
 
 func (c *NetboxClient) ListTenants() (tenants []common.Tenant, err error) {
+	err = c.UpdateTenancyTenantsList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateTenancyTenantsList: %v", err)
+	}
+
 	for _, entry := range c.tenantList.Payload.Results {
 		tenant := common.Tenant{
 			Name: *entry.Name,
@@ -247,6 +329,16 @@ func (c *NetboxClient) ListTenants() (tenants []common.Tenant, err error) {
 }
 
 func (c *NetboxClient) ListGateways() (gateways []common.Gateway, err error) {
+	err = c.UpdateDcimDevicesList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateDcimDevicesList: %v", err)
+	}
+
+	err = c.UpdateVirtualizationVirtualMachinesList()
+	if err != nil {
+		return nil, fmt.Errorf("UpdateVirtualizationVirtualMachinesList: %v", err)
+	}
+
 	for _, entry := range c.dcimDevicesList.Payload.Results {
 		tenant := *entry.Tenant.Slug
 		if entry.PrimaryIp4 != nil {

@@ -37,3 +37,10 @@ type Gateway struct {
 	PrintableAddress string
 	PrintableNetwork string
 }
+
+type IpAddress struct {
+	Address net.IP
+	Network *net.IPNet
+	Dns     string
+	Tenant  string
+}

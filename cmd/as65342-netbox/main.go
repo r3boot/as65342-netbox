@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/r3boot/as65342-netbox/lib/common"
 	"github.com/r3boot/as65342-netbox/lib/generator"
@@ -98,7 +99,18 @@ func main() {
 		}
 	case netboxOperationReverseDNS:
 		{
-			generate.ReverseDNS()
+			serial := time.Now().Format("20060102150405")
+			/*
+				if err := generate.ReverseDNS(serial); err != nil {
+					fmt.Printf("ERROR: ReverseDNS: %v\n", err)
+					os.Exit(1)
+				}
+			*/
+
+			if err := generate.ForwardDNS(serial); err != nil {
+				fmt.Printf("ERROR: ForwardDNS: %v\n", err)
+				os.Exit(1)
+			}
 		}
 	default:
 		{
