@@ -144,6 +144,13 @@ func (g *Generator) AnsibleHostVars() error {
 		fname := entry.Name + ".json"
 		fullFname := g.out + "/host_vars/" + fname
 
+		hostConfig := entry.Config.(map[string]interface{})
+		hostConfig["primary_ip"] = entry.PrimaryIP
+		hostConfig["primary_ip6"] = entry.PrimaryIP6
+		hostConfig["primary_ip4"] = entry.PrimaryIP4
+		hostConfig["tenant"] = entry.Tenant
+		hostConfig["platform"] = entry.Platform
+
 		fd, err := os.Create(fullFname + ".new")
 		if err != nil {
 			return fmt.Errorf("os.Open: %v", err)
@@ -154,7 +161,7 @@ func (g *Generator) AnsibleHostVars() error {
 			fmt.Printf("[+] Wrote %s\n", fullFname)
 		}()
 
-		data, err := json.Marshal(entry.Config)
+		data, err := json.Marshal(hostConfig)
 		if err != nil {
 			return fmt.Errorf("json.Marshal: %v", err)
 		}
