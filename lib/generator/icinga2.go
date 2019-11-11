@@ -116,11 +116,13 @@ object Host "{{ .Name }}" {
   vars.network6 = "net-{{ .PrintablePrimaryNet6 }}"
   vars.network = "net-{{ .PrintablePrimaryNet4 }}"
 
-  var.vhosts["{{ .Name }}"] = {
+  vars.http_vhosts["{{ .Name }}"] = {
+    http_vhost  = "{{ .Name }}"
+    http_port   = 443
+    http_ssl    = true
+    http_sni    = true
     http_uri    = "/_status"
     http_string = "Active connections"
-    http_tls    = true
-    http_sni    = true
   }
 } 
 

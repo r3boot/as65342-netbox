@@ -21,17 +21,24 @@ ansible_become_pass = {{"{{"}} ansible_become_pass {{"}}"}}
 {{- range .Devices }}
 {{ .Name }}
 {{- end }}
-{{ range $tag, $hosts := .Tags }}
+{{ range $platform, $hosts := .Platforms }}
+[{{ $platform }}]
+{{- range $hosts }}
+{{ .Name }}
+{{- end }}
+{{ end }}
+{{- range $tag, $hosts := .Tags }}
 [{{ $tag }}]
 {{- range $hosts }}
 {{ .Name }}
-{{ end }}
 {{- end }}
+{{ end }}
 `
 
 type inventoryFileParams struct {
-	Devices []common.ManagedDevice
-	Tags    map[string][]common.ManagedDevice
+	Devices   []common.ManagedDevice
+	Tags      map[string][]common.ManagedDevice
+	Platforms map[string][]common.ManagedDevice
 }
 
 func (g *Generator) AnsibleInventory() (err error) {
@@ -47,14 +54,20 @@ func (g *Generator) AnsibleInventory() (err error) {
 		}
 	}
 
+	platforms := make(map[string][]common.ManagedDevice)
+	for _, entry := range entries {
+		platforms[entry.Platform] = append(platforms[entry.Platform], entry)
+	}
+
 	t, err := template.New("ansibleInventory").Parse(inventoryFileTemplate)
 	if err != nil {
 		return fmt.Errorf("template.New: %v", err)
 	}
 
 	p := inventoryFileParams{
-		Devices: entries,
-		Tags:    tags,
+		Devices:   entries,
+		Tags:      tags,
+		Platforms: platforms,
 	}
 
 	err = common.CreateDirIfNotExists(g.out)

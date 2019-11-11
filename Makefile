@@ -15,5 +15,10 @@ fetch_dependencies:
 $(BUILD_DIR)/$(TARGET): $(LIB_DIR)/netbox fetch_dependencies
 	go build -v -o "${BUILD_DIR}/${TARGET}" "./cmd/${TARGET}/main.go"
 
+install:
+	strip -v $(BUILD_DIR)/$(TARGET)
+	install -o root -g root -m 0755 $(BUILD_DIR)/$(TARGET) \
+		/usr/local/bin/$(TARGET)
+
 clean:
 	[[ -d "${BUILD_DIR}" ]] && rm -rf "${BUILD_DIR}" || true
