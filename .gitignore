@@ -1,6 +1,8 @@
 *.swp
 *.pyc
+*.xz
 .idea
 x
 build
 lib/netbox
+as65342-netbox-*
