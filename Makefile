@@ -27,7 +27,7 @@ $(BUILD_DIR)/$(TARGET): $(BUILD_DIR) $(LIB_DIR)/netbox fetch_dependencies
 release: $(RELEASE_DIR)
 	strip -v $(BUILD_DIR)/$(TARGET)
 	install -m 0755 $(BUILD_DIR)/$(TARGET) $(RELEASE_DIR)/$(TARGET)
-	tar cvJf $(RELEASE_NAME).tar.xz $(RELEASE_DIR)
+	tar cvzf $(RELEASE_NAME).tar.gz $(RELEASE_DIR)
 
 install:
 	strip -v $(BUILD_DIR)/$(TARGET)

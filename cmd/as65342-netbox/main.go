@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/r3boot/as65342-netbox/lib/common"
 	"github.com/r3boot/as65342-netbox/lib/generator"
@@ -18,7 +17,7 @@ const (
 	netboxHostDefault         = "localhost:443"
 	netboxTokenDefault        = ""
 	netboxNoTLSDefault        = false
-	netboxOperationReverseDNS = "rdns"
+	netboxOperationReverseDNS = "dns"
 	netboxOperationAnsible    = "ansible"
 	netboxOperationIcinga2    = "icinga2"
 )
@@ -29,6 +28,7 @@ func main() {
 	netboxNoTLS := flag.Bool("notls", netboxNoTLSDefault, "Set to disable TLS")
 	netboxGenerate := flag.String("generate", "", "What to generate")
 	netboxOutput := flag.String("out", "", "Where to store output")
+	netboxSerial := flag.String("serial", "", "Serial number to use for dns zones")
 	flag.Parse()
 
 	http_proto := "https"
@@ -99,15 +99,13 @@ func main() {
 		}
 	case netboxOperationReverseDNS:
 		{
-			serial := time.Now().Format("20060102150405")
-			/*
-				if err := generate.ReverseDNS(serial); err != nil {
-					fmt.Printf("ERROR: ReverseDNS: %v\n", err)
-					os.Exit(1)
-				}
-			*/
 
-			if err := generate.ForwardDNS(serial); err != nil {
+			if err := generate.ReverseDNS(*netboxSerial); err != nil {
+				fmt.Printf("ERROR: ReverseDNS: %v\n", err)
+				os.Exit(1)
+			}
+
+			if err := generate.ForwardDNS(*netboxSerial); err != nil {
 				fmt.Printf("ERROR: ForwardDNS: %v\n", err)
 				os.Exit(1)
 			}
