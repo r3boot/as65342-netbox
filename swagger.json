@@ -18260,6 +18260,9 @@
           "title": "Custom fields",
           "type": "object"
         },
+        "site": {
+          "$ref": "#/definitions/NestedSite"
+        },
         "tags": {
           "title": "Tags",
           "type": "array",

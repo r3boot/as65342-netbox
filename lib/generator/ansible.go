@@ -27,6 +27,12 @@ ansible_become_pass = {{"{{"}} ansible_become_pass {{"}}"}}
 {{ .Name }}
 {{- end }}
 {{ end }}
+{{ range $site, $hosts := .Sites }}
+[{{ $site }}]
+{{- range $hosts }}
+{{ .Name }}
+{{- end }}
+{{ end }}
 {{- range $tag, $hosts := .Tags }}
 [{{ $tag }}]
 {{- range $hosts }}
@@ -39,12 +45,24 @@ type inventoryFileParams struct {
 	Devices   []common.ManagedDevice
 	Tags      map[string][]common.ManagedDevice
 	Platforms map[string][]common.ManagedDevice
+	Sites     map[string][]common.ManagedDevice
 }
 
+var allowedPlatforms []string = []string{"centos", "openbsd"}
+
 func (g *Generator) AnsibleInventory() (err error) {
-	entries, err := g.client.GetHostList()
+	allEntries, err := g.client.GetHostList()
 	if err != nil {
 		return fmt.Errorf("client.GetHostListFor: %v", err)
+	}
+
+	entries := []common.ManagedDevice{}
+	for _, entry := range allEntries {
+		for _, platform := range allowedPlatforms {
+			if platform == entry.Platform {
+				entries = append(entries, entry)
+			}
+		}
 	}
 
 	tags := make(map[string][]common.ManagedDevice)
@@ -59,6 +77,11 @@ func (g *Generator) AnsibleInventory() (err error) {
 		platforms[entry.Platform] = append(platforms[entry.Platform], entry)
 	}
 
+	sites := make(map[string][]common.ManagedDevice)
+	for _, entry := range entries {
+		sites[entry.Site] = append(sites[entry.Site], entry)
+	}
+
 	t, err := template.New("ansibleInventory").Parse(inventoryFileTemplate)
 	if err != nil {
 		return fmt.Errorf("template.New: %v", err)
@@ -68,6 +91,7 @@ func (g *Generator) AnsibleInventory() (err error) {
 		Devices:   entries,
 		Tags:      tags,
 		Platforms: platforms,
+		Sites:     sites,
 	}
 
 	err = common.CreateDirIfNotExists(g.out)
@@ -130,9 +154,18 @@ func (g *Generator) AnsibleGroupVars() error {
 }
 
 func (g *Generator) AnsibleHostVars() error {
-	entries, err := g.client.GetHostList()
+	allEntries, err := g.client.GetHostList()
 	if err != nil {
 		return fmt.Errorf("client.GetHostListFor: %v", err)
+	}
+
+	entries := []common.ManagedDevice{}
+	for _, entry := range allEntries {
+		for _, platform := range allowedPlatforms {
+			if platform == entry.Platform {
+				entries = append(entries, entry)
+			}
+		}
 	}
 
 	err = common.CreateDirIfNotExists(g.out + "/host_vars")
@@ -150,6 +183,7 @@ func (g *Generator) AnsibleHostVars() error {
 		hostConfig["primary_ip4"] = entry.PrimaryIP4
 		hostConfig["tenant"] = entry.Tenant
 		hostConfig["platform"] = entry.Platform
+		hostConfig["site"] = entry.Site
 
 		fd, err := os.Create(fullFname + ".new")
 		if err != nil {

@@ -50,6 +50,14 @@ object HostGroup "{{ . }}-servers" {
 
 {{- end }}
 
+{{- range .Sites }}
+object HostGroup "site-{{ . }}-servers" {
+  display_name = "{{ . }} Servers"
+  assign where host.vars.site == "{{ . }}"
+}
+
+{{- end }}
+
 {{- range .Ipv4Gateways }}
 object Host "gw-{{ .PrintableAddress }}" {
   import "{{ .Tenant }}-gateway"
@@ -113,6 +121,7 @@ object Host "{{ .Name }}" {
 
   vars.platform = "{{ .Platform }}"
   vars.tenant = "{{ .Tenant }}"
+  vars.site = "{{ .Site }}"
   vars.network6 = "net-{{ .PrintablePrimaryNet6 }}"
   vars.network = "net-{{ .PrintablePrimaryNet4 }}"
 
@@ -135,6 +144,7 @@ type icinga2Params struct {
 	Ipv4Gateways []common.Gateway
 	Ipv6Gateways []common.Gateway
 	Platforms    []string
+	Sites        []string
 }
 
 func (g *Generator) Icinga2Config() error {
@@ -177,6 +187,20 @@ func (g *Generator) Icinga2Config() error {
 		}
 	}
 
+	allSites := []string{}
+	for _, device := range devices {
+		newSite := device.Site
+		is_listed := false
+		for _, site := range allSites {
+			if site == newSite {
+				is_listed = true
+			}
+		}
+		if !is_listed {
+			allSites = append(allSites, newSite)
+		}
+	}
+
 	t, err := template.New("ansibleInventory").Parse(icinga2Template)
 	if err != nil {
 		return fmt.Errorf("template.New: %v", err)
@@ -188,6 +212,7 @@ func (g *Generator) Icinga2Config() error {
 		Ipv4Gateways: v4Gateways,
 		Ipv6Gateways: v6Gateways,
 		Platforms:    allPlatforms,
+		Sites:        allSites,
 	}
 
 	err = common.CreateDirIfNotExists(g.out)

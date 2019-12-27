@@ -9,7 +9,7 @@ import (
 
 var (
 	allowedTenants   []string = []string{"as65342"}
-	allowedPlatforms []string = []string{"centos", "openbsd"}
+	allowedPlatforms []string = []string{"centos", "coreos", "openbsd"}
 	allowedStatus    []string = []string{"Active"}
 )
 

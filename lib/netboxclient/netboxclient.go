@@ -208,6 +208,7 @@ func (c *NetboxClient) GetHostList() (allDevices []common.ManagedDevice, err err
 			Tags:     entry.Tags,
 			Tenant:   *entry.Tenant.Slug,
 			Platform: *entry.Platform.Slug,
+			Site:     *entry.Site.Slug,
 			Config:   entry.ConfigContext,
 		}
 
@@ -261,6 +262,7 @@ func (c *NetboxClient) GetHostList() (allDevices []common.ManagedDevice, err err
 			Tags:     entry.Tags,
 			Tenant:   *entry.Tenant.Slug,
 			Platform: *entry.Platform.Slug,
+			Site:     *entry.Site.Slug,
 			Config:   entry.ConfigContext,
 		}
 
