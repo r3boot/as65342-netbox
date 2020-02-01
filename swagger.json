@@ -13558,8 +13558,7 @@
               "type": "string"
             },
             "value": {
-              "type": "integer",
-              "x-nullable": true
+              "type": "string"
             }
           }
         },
@@ -13580,7 +13579,7 @@
               "type": "string"
             },
             "value": {
-              "type": "integer"
+              "type": "string"
             }
           }
         },
@@ -16647,7 +16646,7 @@
               "type": "string"
             },
             "value": {
-              "type": "integer"
+              "type": "string"
             }
           }
         },
@@ -16663,7 +16662,7 @@
               "type": "string"
             },
             "value": {
-              "type": "integer"
+              "type": "string"
             }
           }
         },
@@ -16921,7 +16920,7 @@
               "type": "string"
             },
             "value": {
-              "type": "integer"
+              "type": "string"
             }
           }
         },
@@ -18209,7 +18208,7 @@
               "type": "string"
             },
             "value": {
-              "type": "integer"
+              "type": "string"
             }
           }
         },
