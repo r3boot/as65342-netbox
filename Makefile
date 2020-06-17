@@ -1,4 +1,4 @@
-TARGET = ansible-generator
+TARGET = as65342-netbox
 
 BUILD_DIR = ./build
 LIB_DIR = ./lib
@@ -13,7 +13,8 @@ TARGETS = ansible-generator \
 		  backup-generator \
 		  dns-generator \
 		  icinga2-generator \
-		  mailman-generator
+		  mailman-generator \
+		  rundeck-generator
 
 all: $(TARGETS)
 
@@ -43,6 +44,8 @@ release: $(RELEASE_DIR)
 		$(RELEASE_DIR)/dns-generator
 	install -m 0755 $(BUILD_DIR)/icinga2-generator \
 		$(RELEASE_DIR)/icinga2-generator
+	install -m 0755 $(BUILD_DIR)/rundeck-generator \
+		$(RELEASE_DIR)/rundeck-generator
 	tar cvzf $(RELEASE_NAME).tar.gz $(RELEASE_DIR)
 
 install:
@@ -55,6 +58,8 @@ install:
 		$(PREFIX)/bin/dns-generator
 	install -m 0755 $(BUILD_DIR)/icinga2-generator \
 		$(PREFIX)/bin/icinga2-generator
+	install -m 0755 $(BUILD_DIR)/rundeck-generator \
+		$(PREFIX)/bin/rundeck-generator
 
 clean:
 	[[ -d "${BUILD_DIR}" ]] && rm -rf "${BUILD_DIR}" || true
